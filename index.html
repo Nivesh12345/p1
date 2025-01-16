@@ -1,36 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-    
-    <title></title>
-   
     <style>
-        html, body{
-            margin: 0px;
-            height: 100%;
+        body {
+            margin: 0;
             overflow: hidden;
+            background: #000;
         }
         canvas {
-            border: 1px solid red;
             display: block;
-            background:white;
-            position:absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%,-50%);
-
         }
-        #projectImage {
-            display: none;
-        }
-        
     </style>
 </head>
 <body>
+    <canvas id="myCanvas"></canvas>
+    <script type="module">
+        import init, { ParticleSystem } from './pkg/color_particle.js';
 
-<canvas id="canvas" style="background-color: black;"></canvas>
+        async function startApp() {
+            await init();
+            const canvas = document.getElementById('myCanvas');
+            const ctx = canvas.getContext('2d');
+            const particleSystem = new ParticleSystem();
+            let hue = 0; // Incrementing hue for color effect
 
-<script src="effect1.js"></script>  
+            // Set canvas size
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
 
+            // Handle mouse move event
+            canvas.addEventListener('mousemove', (event) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                const color = `hsl(${hue}, 100%, 50%)`;
+                particleSystem.add_particles(x, y, color, 500);
+                hue = (hue + 5) % 360; // Increment hue and reset after 360
+                console.log(`Added particles at (${x}, ${y}) with color ${color}`);
+            });
+
+            // Animation loop
+            function animate() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Trail effect
+                // ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                particleSystem.update();
+                const particles = particleSystem.get_particle_data();
+
+                for (let i = 0; i < particles.length; i++) {
+                    const [x, y, size, color] = particles[i];
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = color; // Corrected: Use passed color
+                    ctx.fill();
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        startApp().catch(console.error);
+    </script>
 </body>
 </html>
